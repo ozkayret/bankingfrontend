@@ -48,8 +48,13 @@ const CreateAccount = () => {
     setLoader(true);
     console.log("--> accountHandler");
     try {
-      await api.post("/api/accounts", data);
-      toast.success("Hesap başarıyla oluşturuldu!");
+      if (!isCreateAccount) {
+        await api.put("/api/accounts", data);
+        toast.success("Hesap başarıyla güncellendi!");
+      } else {
+        await api.post("/api/accounts", data);
+        toast.success("Hesap başarıyla oluşturuldu!");
+      }
       reset();
       navigate("/manage-accounts");
     } catch (error) {
