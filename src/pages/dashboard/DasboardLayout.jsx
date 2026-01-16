@@ -1,23 +1,43 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAccounts } from "../../store/accountSlice";
+import { fetchAccounts, setPage, setPageSize } from "../../store/accountSlice";
 import AccountItem from "../../components/AccountItem";
+import Pagination from "../../components/Pagination";
 
 const DasboardLayout = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { accounts, loading } = useSelector((state) => state.account);
+  const { accounts, loading, pageSize, page, totalRecords } = useSelector(
+    (state) => state.account
+  );
   const [name, setName] = React.useState("");
   const [accountId, setAccountId] = React.useState("");
 
   useEffect(() => {
-    dispatch(fetchAccounts({ name, accountId }));
+    dispatch(fetchAccounts({ name, accountId, pageSize, page }));
   }, [dispatch]);
 
   const filterHandler = () => {
     console.log("Filter applied with ", name, accountId);
-    dispatch(fetchAccounts({ name, accountId }));
+    dispatch(fetchAccounts({ name, accountId, pageSize, page }));
+  };
+
+  const totalPages = Math.ceil(totalRecords / pageSize);
+
+  const handlePageChange = (newPage) => {
+    console.log("Changing to page:", newPage);
+    if (newPage >= 0 && newPage < totalPages && newPage !== page) {
+      dispatch(setPage(newPage));
+      dispatch(fetchAccounts({ name, accountId, pageSize, page: newPage }));
+    }
+  };
+
+  const handleOnPageSizeChange = (newPageSize) => {
+    console.log("Changing page size to:", newPageSize);
+    dispatch(setPageSize(newPageSize));
+    dispatch(setPage(0));
+    dispatch(fetchAccounts({ name, accountId, pageSize: newPageSize, page: 0 }));
   };
 
   return (
@@ -89,6 +109,16 @@ const DasboardLayout = () => {
                 {accounts.map((account) => (
                   <AccountItem key={account.id} {...account} />
                 ))}
+
+                <Pagination
+                  page={page}
+                  pageSize={pageSize}
+                  totalRecords={totalRecords}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                  onPageSizeChange={handleOnPageSizeChange}
+                />
+
               </div>
             )}
           </div>

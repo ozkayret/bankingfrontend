@@ -3,7 +3,7 @@ import api from "../api/api";
 
 export const fetchAccounts = createAsyncThunk(
   "account/fetchAccounts",
-  async ({name, accountId } = {}, { rejectWithValue }) => {
+  async ({name, accountId, pageSize, page } = {}, { rejectWithValue }) => {
     console.log("Fetching accounts with filters:", { name, accountId });
 
     try {
@@ -11,6 +11,8 @@ export const fetchAccounts = createAsyncThunk(
         params: {
           name,
           number:accountId,
+          size:pageSize,
+          page:page,
         },
       });
       return response.data;
@@ -23,6 +25,9 @@ export const fetchAccounts = createAsyncThunk(
 );
 
 const initialState = {
+  pageSize: 10,
+  page: 0,
+  totalRecords: 0,
   accounts: [],
   loading: false,
   error: null,
@@ -31,7 +36,14 @@ const initialState = {
 const accountSlice = createSlice({
   name: "account",
   initialState,
-  reducers: {},
+  reducers: {
+    setPageSize: (state, action) => {
+      state.pageSize = action.payload;
+    },
+    setPage: (state, action) => {
+      state.page = action.payload;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchAccounts.pending, (state) => {
@@ -40,7 +52,9 @@ const accountSlice = createSlice({
       })
       .addCase(fetchAccounts.fulfilled, (state, action) => {
         state.loading = false;
-        state.accounts = action.payload;
+        state.accounts = action.payload.content;
+        state.pageSize = action.payload.size;
+        state.totalRecords = action.payload.totalElements;
       })
       .addCase(fetchAccounts.rejected, (state, action) => {
         state.loading = false;
@@ -48,5 +62,7 @@ const accountSlice = createSlice({
       });
   },
 });
+
+export const { setPageSize, setPage } = accountSlice.actions;
 
 export default accountSlice.reducer;
